@@ -1,0 +1,49 @@
+---
+title: "Powerlifting: An Exploration on the Data"
+author: "Zach Eanes & Dalton Rogers"
+output: html_document
+date: "2024-05-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+lifting <- read_csv("openpowerlifting-2024-03-23.csv")
+# View(lifting)
+```
+
+# What is "Powerlifting"?
+As an easy description, powerlifting is the open sport of competing to see who can lift
+the most total weight across three primary lifts. These lifts being Squat, Bench, and Deadlift 
+(referred to as SBD throughout this project). 
+
+The general structure of many of these competitions includes many little factors:
+1) Everyone is split into weight classes, gender, and age classes. This is to ensure everyone is 
+   competing fairly and no one has a clear advantage.
+2) Every lifter has 3 attempts for each lifting, leaving 9 total lifts across the competition. 
+3) Drug free! No steroids or substances that may boost someone's performance, and these 
+   competitors are tested to ensure they are drug free.
+4) The concept of good and failed lifts: There's 3 judges for a lift, all viewing a different 
+   perspective of the lifter. In order for a lift to be good, 2/3 judges must deem it a good lift.
+   Some common failures include not getting enough depth squatting, not controlling the drop after
+   a deadlift, or of course literally not getting the weight up.
+   
+# Linear Progression of Weight Classes?
+This one is simple, do heavier weights classes generally lift higher amounts than lower? We can
+observe the best successful lift for each SBD and find an average for each weight class group
+and then compare the classes to see if there's a linear progression.
+```{r}
+
+```
+
+   
+# Percentage of failed lifts across all nine
+In this section, we wanted to observe if for certain lifts, competitors are more likely to
+fail the lift. In the database, if a life begins with a "-", this means it was a failure. 
+Using this, we may be able to get the percentage of good lifts to failed lifts for each lift, 
+all 3 for SBD.
+```{r}
+
+```
+
