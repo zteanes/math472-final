@@ -32,7 +32,7 @@ The general structure of many of these competitions includes many little factors
 # Linear Progression of Weight Classes?
 This one is simple, do heavier weights classes generally lift higher amounts than lower? We can
 observe the best successful lift for each SBD and find an average for each weight class group
-and then compare the classes to see if there's a linear progression.
+and then we can compare the classes to see if there's a linear progression.
 ```{r}
 
 ```
