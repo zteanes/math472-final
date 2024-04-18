@@ -9,12 +9,10 @@ date: "2024-05-07"
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 
-#lifting <- read_csv("openpowerlifting-2024-03-23.csv")
 ipf <- read_csv("openipf-2024-04-13.csv")
-View(ipf)
+# View(ipf)
 
 ipf <- janitor::clean_names(ipf)
-# View(lifting)
 ```
 
 # What is "Powerlifting"?
@@ -89,7 +87,7 @@ weights_male <- avg_weights(male_classes); weights_male
 weights_female <- avg_weights(female_classes); weights_female 
 
 # group by the weight class and put sbd all next to each other in group
-male_to_graph |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) + 
+weights_male |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) + 
     geom_bar(stat = "identity", position = "dodge") +
     labs(
         title = "Comparing Male Average Weights for SBD across Common Weight Classes",
@@ -97,18 +95,51 @@ male_to_graph |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) +
         y = "Average Weight (kg)"
     ) + scale_fill_discrete(name = "What Lift?", labels = c("Squat", "Bench", "Deadlift"))
 
-female_to_graph |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) + 
+weights_female |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) + 
     geom_bar(stat = "identity", position = "dodge") +
     labs(
         title = "Comparing Female Average Weights for SBD across Common Weight Classes",
         x = "Weight Class (kg)",
         y = "Average Weight (kg)"
     ) + scale_fill_discrete(name = "What Lift?", labels = c("Squat", "Bench", "Deadlift"))
-    
+```
+In order to get this information together, we had many failures and attempts at using the 
+data is a less tidy manner. The biggest change was the inclusion of the pivot_longer in order
+to allow us to create more rows and make the graphing easier. It allows us to group and place
+each lift inside of the group, as well as creating a cleaner chart in general. Beforehand,
+we broke some of the basic policies of tidy data, including storing too much information
+inside of a cell and "double dipping". We had numbers in the columns for the lift itself, and
+in the end out newest form is tidyest and surely best for our purposes. Below is some of the 
+attempts we had beforehand, which ended as a failure in all honesty.
+
+```{r}
+# below method is an early attempt that ended in failure 
+pre_avg_weights <- function(class) {
+    class |>  # filter out any entry missing the best lift
+        filter(!is.na(best3squat_kg)) |> 
+        filter(!is.na(best3bench_kg)) |> 
+        filter(!is.na(best3deadlift_kg)) |> 
+    group_by(weight_class_kg) |> # group by their respective classes
+    summarise(avg_squat = sum(best3squat_kg) / n(), # get avg squat
+           avg_bench = sum(best3bench_kg) / n(), # get avg bench
+           avg_dead = sum(best3deadlift_kg) / n()) |> # get avg deadlift 
+    arrange(weight_class_kg)
+}
+
+# recreate our data set for demonstration purposes
+male_classes <- ipf |> 
+    filter(weight_class_kg %in% c(59, 66, 74, 83, 93, 105, 120, "120+") & sex == "M") |>
+    mutate(weight_class_kg = factor(weight_class_kg, 
+                                       levels = male_factors))
+# this was the dataset before
+pre_avg_weights(male_classes) 
+
+# this was out plot before the pivot_longer, as we just had each lift in thier own graph
+pre_avg_weights(male_classes) |> ggplot(aes(x = weight_class_kg, y = avg_squat, fill = avg_squat)) + 
+    geom_bar(stat = "identity") 
 
 ```
 
-   
 # Percentage of failed lifts across all nine
 In this section, we wanted to observe if for certain lifts, competitors are more likely to
 fail the lift. In the database, if a life begins with a "-", this means it was a failure. 
