@@ -47,21 +47,20 @@ IPF lists their male weight classes as:
 120.0+ kg Class: from 120.01 kg up to unlimited
 
 IPF lists their female weifht classes as:
-47.0 kg Class up to 47.0 kg
-52.0 kg Class from 47.01 kg up to 52.0 kg
-57.0 kg Class from 52.01 kg up to 57.0 kg
-63.0 kg Class from 57.01 kg up to 63.0 kg
-69.0 kg Class from 63.01 kg up to 69.0 kg
-76.0 kg Class from 69.01 kg up to 76.0 kg
-84.0 kg Class from 76.01 kg up to 84.0 kg
-84.0+ kg Class from 84.01 kg up to unlimited
+47.0 kg Class:  up to 47.0 kg
+52.0 kg Class:  from 47.01 kg up to 52.0 kg
+57.0 kg Class:  from 52.01 kg up to 57.0 kg
+63.0 kg Class:  from 57.01 kg up to 63.0 kg
+69.0 kg Class:  from 63.01 kg up to 69.0 kg
+76.0 kg Class:  from 69.01 kg up to 76.0 kg
+84.0 kg Class:  from 76.01 kg up to 84.0 kg
+84.0+ kg Class: from 84.01 kg up to unlimited
 ```{r}
 # get those in proper weight classes, and make weight_class_kg a factor for organization
 male_factors = c(59, 66, 74, 83, 93, 105, 120, "120+")
 male_classes <- ipf |> 
     filter(weight_class_kg %in% c(59, 66, 74, 83, 93, 105, 120, "120+") & sex == "M") |>
-    mutate(weight_class_kg = factor(weight_class_kg, 
-                                       levels = male_factors))
+    mutate(weight_class_kg = factor(weight_class_kg, levels = male_factors))
 
 female_factors = c(47, 52, 57, 63, 69, 76, 84, "84+")
 female_classes <- ipf |>
@@ -80,9 +79,10 @@ avg_weights <- function(class) {
         filter(!is.na(best3bench_kg)) |> 
         filter(!is.na(best3deadlift_kg)) |> 
     group_by(weight_class_kg) |> # group by their respective classes
-    summarise(avg_squat = sum(best3squat_kg) / n(), # get avg squat
-           avg_bench = sum(best3bench_kg) / n(), # get avg bench
-           avg_dead = sum(best3deadlift_kg) / n()) |> # get avg deadlift 
+    summarise(
+        avg_squat = sum(best3squat_kg) / n(), # get avg squat
+        avg_bench = sum(best3bench_kg) / n(), # get avg bench
+        avg_dead = sum(best3deadlift_kg) / n()) |> # get avg deadlift 
     arrange(weight_class_kg) # arrange to make it better
 }
 
@@ -93,7 +93,7 @@ avg_weights <- function(class) {
 make_avgs_tidyer <- function(class) {
     # pivot to long format to graph easier
     class |> pivot_longer(cols = c(avg_squat, avg_bench, avg_dead),
-                          names_to = "lift", values_to = "weight")
+                          names_to = "lift", values_to = "avg_weight")
 }
 
 # get information we need for our data and make it usable
@@ -101,21 +101,21 @@ weights_male <- avg_weights(male_classes) |> make_avgs_tidyer(); weights_male
 weights_female <- avg_weights(female_classes) |> make_avgs_tidyer(); weights_female 
 
 # group by the weight class and put sbd all next to each other in group
-weights_male |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) + 
+weights_male |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = lift)) + 
     geom_bar(stat = "identity", position = "dodge") +
     labs(
         title = "Comparing Male Average Weights for SBD across Common Weight Classes",
         x = "Weight Class (kg)",
         y = "Average Weight (kg)"
-    ) + scale_fill_discrete(name = "What Lift?", labels = c("Squat", "Bench", "Deadlift"))
+    ) + scale_fill_discrete(name = "What Lift?", labels = c("Bench", "Deadlift", "Squat"))
 
-weights_female |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) + 
+weights_female |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = lift)) + 
     geom_bar(stat = "identity", position = "dodge") +
     labs(
         title = "Comparing Female Average Weights for SBD across Common Weight Classes",
         x = "Weight Class (kg)",
         y = "Average Weight (kg)"
-    ) + scale_fill_discrete(name = "What Lift?", labels = c("Squat", "Bench", "Deadlift"))
+    ) + scale_fill_discrete(name = "What Lift?", labels = c("Bench", "Deadlift", "Squat"))
 ```
 In order to get this information together, we had many failures and attempts at using the 
 data is a less tidy manner. The biggest change was the inclusion of the pivot_longer in order
@@ -153,6 +153,7 @@ pre_avg_weights(male_classes) |> ggplot(aes(x = weight_class_kg, y = avg_squat, 
     geom_bar(stat = "identity") 
 
 ```
+
 
 # Percentage of failed lifts across all nine
 In this section, we wanted to observe if for certain lifts, competitors are more likely to
