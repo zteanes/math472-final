@@ -58,13 +58,18 @@ IPF lists their female weifht classes as:
 84.0 kg Class from 76.01 kg up to 84.0 kg
 84.0+ kg Class from 84.01 kg up to unlimited
 ```{r}
-# get those in proper weight classes
+# get those in proper weight classes, and make weight_class_kg a factor
+male_factors = c(59, 66, 74, 83, 93, 105, 120, "120+")
 male_classes <- ipf |> 
-    filter(weight_class_kg %in% c(59, 66, 74, 83, 93, 105, 120, "120+") & sex == "M")
+    filter(weight_class_kg %in% c(59, 66, 74, 83, 93, 105, 120, "120+") & sex == "M") |>
+    mutate(weight_class_kg = factor(weight_class_kg, 
+                                       levels = male_factors))
 
+female_factors = c(47, 52, 57, 63, 69, 76, 84, "84+")
 female_classes <- ipf |>
-    filter(weight_class_kg %in% c(47, 52, 57, 63, 69, 76, 84, "84+") & sex == "F")
-
+    filter(weight_class_kg %in% c(47, 52, 57, 63, 69, 76, 84, "84+") & sex == "F") |>
+    mutate(weight_class_kg = factor(weight_class_kg, levels = female_factors))
+           
 # get average of each best lift in each weight class
 avg_weights <- function(class) {
     class |>  # filter out any entry missing the best lift
@@ -74,21 +79,31 @@ avg_weights <- function(class) {
     group_by(weight_class_kg) |> # group by their respective classes
     summarise(avg_squat = sum(best3squat_kg) / n(), # get avg squat
            avg_bench = sum(best3bench_kg) / n(), # get avg bench
-           avg_dead = sum(best3deadlift_kg) / n()) # get avg deadlift
+           avg_dead = sum(best3deadlift_kg) / n()) |> # get avg deadlift 
+    arrange(weight_class_kg) |>
+    pivot_longer(cols = c(avg_squat, avg_bench, avg_dead),  # pivot to long format to graph easier
+                 names_to = "lift", values_to = "weight")
 }
 
 weights_male <- avg_weights(male_classes); weights_male
-weights_female <- avg_weights(female_classes); weights_female
+weights_female <- avg_weights(female_classes); weights_female 
 
-# plot the two against each other
-weights_male |> ggplot(aes(x = weight_class_kg, y = avg_squat, fill = avg_squat)) + 
-    geom_bar(stat = "identity")
+# group by the weight class and put sbd all next to each other in group
+male_to_graph |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) + 
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(
+        title = "Comparing Male Average Weights for SBD across Common Weight Classes",
+        x = "Weight Class (kg)",
+        y = "Average Weight (kg)"
+    ) + scale_fill_discrete(name = "What Lift?", labels = c("Squat", "Bench", "Deadlift"))
 
-weights_male |> ggplot(aes(x = weight_class_kg, y = avg_bench, fill = avg_squat)) + 
-    geom_bar(stat = "identity")
-
-weights_male |> ggplot(aes(x = weight_class_kg, y = avg_dead, fill = avg_squat)) + 
-    geom_bar(stat = "identity")
+female_to_graph |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) + 
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(
+        title = "Comparing Female Average Weights for SBD across Common Weight Classes",
+        x = "Weight Class (kg)",
+        y = "Average Weight (kg)"
+    ) + scale_fill_discrete(name = "What Lift?", labels = c("Squat", "Bench", "Deadlift"))
     
 
 ```
