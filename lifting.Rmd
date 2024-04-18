@@ -56,7 +56,7 @@ IPF lists their female weifht classes as:
 84.0 kg Class from 76.01 kg up to 84.0 kg
 84.0+ kg Class from 84.01 kg up to unlimited
 ```{r}
-# get those in proper weight classes, and make weight_class_kg a factor
+# get those in proper weight classes, and make weight_class_kg a factor for organization
 male_factors = c(59, 66, 74, 83, 93, 105, 120, "120+")
 male_classes <- ipf |> 
     filter(weight_class_kg %in% c(59, 66, 74, 83, 93, 105, 120, "120+") & sex == "M") |>
@@ -68,7 +68,12 @@ female_classes <- ipf |>
     filter(weight_class_kg %in% c(47, 52, 57, 63, 69, 76, 84, "84+") & sex == "F") |>
     mutate(weight_class_kg = factor(weight_class_kg, levels = female_factors))
            
-# get average of each best lift in each weight class
+
+
+# This function gets the average of the best lift for each factor and arranges it
+# by the weight class itself
+#
+# Args: class - the class we want to get the average weights for
 avg_weights <- function(class) {
     class |>  # filter out any entry missing the best lift
         filter(!is.na(best3squat_kg)) |> 
@@ -78,13 +83,22 @@ avg_weights <- function(class) {
     summarise(avg_squat = sum(best3squat_kg) / n(), # get avg squat
            avg_bench = sum(best3bench_kg) / n(), # get avg bench
            avg_dead = sum(best3deadlift_kg) / n()) |> # get avg deadlift 
-    arrange(weight_class_kg) |>
-    pivot_longer(cols = c(avg_squat, avg_bench, avg_dead),  # pivot to long format to graph easier
-                 names_to = "lift", values_to = "weight")
+    arrange(weight_class_kg) # arrange to make it better
 }
 
-weights_male <- avg_weights(male_classes); weights_male
-weights_female <- avg_weights(female_classes); weights_female 
+# This function takes our data and makes the data itself tidier and simple to use for
+# both data exploration and graphing.
+#
+# Args: class - the class we want to make tidier 
+make_avgs_tidyer <- function(class) {
+    # pivot to long format to graph easier
+    class |> pivot_longer(cols = c(avg_squat, avg_bench, avg_dead),
+                          names_to = "lift", values_to = "weight")
+}
+
+# get information we need for our data and make it usable
+weights_male <- avg_weights(male_classes) |> make_avgs_tidyer(); weights_male
+weights_female <- avg_weights(female_classes) |> make_avgs_tidyer(); weights_female 
 
 # group by the weight class and put sbd all next to each other in group
 weights_male |> ggplot(aes(x = weight_class_kg, y = weight, fill = lift)) + 
