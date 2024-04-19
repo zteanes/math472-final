@@ -46,7 +46,7 @@ IPF lists their male weight classes as:
 120.0 kg Class:  from 105.01 kg up to 120.0 kg
 120.0+ kg Class: from 120.01 kg up to unlimited
 
-IPF lists their female weifht classes as:
+IPF lists their female weight classes as:
 47.0 kg Class:  up to 47.0 kg
 52.0 kg Class:  from 47.01 kg up to 52.0 kg
 57.0 kg Class:  from 52.01 kg up to 57.0 kg
