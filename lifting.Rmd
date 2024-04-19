@@ -55,7 +55,7 @@ IPF lists their female weifht classes as:
 76.0 kg Class:  from 69.01 kg up to 76.0 kg
 84.0 kg Class:  from 76.01 kg up to 84.0 kg
 84.0+ kg Class: from 84.01 kg up to unlimited
-```{r}
+```{r avg_success}
 # get those in proper weight classes, and make weight_class_kg a factor for organization
 male_factors = c(59, 66, 74, 83, 93, 105, 120, "120+")
 male_classes <- ipf |> 
@@ -121,10 +121,10 @@ to allow us to create more rows and make the graphing easier. It allows us to gr
 each lift inside of the group, as well as creating a cleaner chart in general. Beforehand,
 we broke some of the basic policies of tidy data, including storing too much information
 inside of a cell and "double dipping". We had numbers in the columns for the lift itself, and
-in the end out newest form is tidyest and surely best for our purposes. Below is some of the 
+in the end out newest form is tidiest and surely best for our purposes. Below is some of the 
 attempts we had beforehand, which ended as a failure in all honesty.
 
-```{r}
+```{r avg_failure}
 # below method is an early attempt that ended in failure 
 pre_avg_weights <- function(class) {
     class |>  # filter out any entry missing the best lift
@@ -152,7 +152,7 @@ pre_avg_weights(male_classes) |> ggplot(aes(x = weight_class_kg, y = avg_squat, 
 ```
 
 
-# Percentage of failed lifts across all nine
+# Percentage of Failed Lifts Across all Nine Attempts
 In this section, we wanted to observe if for certain lifts, competitors are more likely to
 fail the lift. In the database, if a life begins with a "-", this means it was a failure. 
 Using this, we may be able to get the percentage of good lifts to failed lifts for each lift, 
@@ -198,30 +198,43 @@ percentage_failed <- function(class) {
 
 # get the percentage of failed lifts for each lift
 rates <- percentage_failed(good_lifts)
-rates
-# graph the rates, success and fail for each lift. bar out of 100 with the percentage making
-# the 100
-rates |> ggplot(aes(x = lift, y = failed, fill = lift)) + 
-    geom_bar(stat = "identity", position = position_stack()) +
-    labs(
-        title = "Percentage of Failed Lifts for Each Lift",
-        x = "Lift",
-        y = "Percentage (%)"
-    )
 
-
-lift_data_long <- rates |>
-  gather(key = "outcome", value = "percentage", -lift); lift_data_long
+# longer data in order to graph easier :)
+lift_data_long <- rates |> 
+    pivot_longer(cols = c(failed, success), names_to = "outcome", values_to = "percentage")
 
 # Plot
 ggplot(lift_data_long, aes(x = lift, y = percentage, fill = outcome)) +
-    geom_bar(stat = "identity") +
+    # bar chart of the percentage of failed and successful lifts for each lift
+    geom_bar(stat = "identity") + 
+    # add text to the chart showing the percentage itself 
+    geom_text(aes(label = paste0(round(percentage, 2), "%")), 
+              position = position_stack(vjust = 0.5), 
+              color = "white") +
     labs(
         title = "Percentage of Failed and Successful Lifts for Each Lift",
         x = "Lift",
         y = "Percentage (%)",
         fill = "Outcome"
     ) +
-    scale_fill_manual(values = c("failed" = "red", "success" = "green"))
+    # colors for the percentages themselves 
+    scale_fill_manual(values = c("success" = "darkgreen", "failed" = "red"), 
+                      name = "Outcome of Lift", labels = c("Failure", "Success")) +
+    # make the x axis text easier to read
+    theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
+Looking at the chart itself, there's some shocking results. First, we never expected the last
+bench attempt to have the highest failure rate. This is because the bench press is generally
+attempted safely, as competitors still have the deadlift after to try and get more. Our guess was
+that the last deadlift would have the highest failure rate, for many reasons:
+1) It's the last lift, so competitors will be more fatigued from the rest of the event. 
+2) Since it's the last, many competitors go "all-out" to attempt to place on the podium.
+3) In generality, deadlift is the hardest lift to get up, because grip strength is a large 
+   limiting factor for the strongest competitors.
+   
+Lastly, we were able to conclude that there is some trend to where the first lift is the most
+successful, and the last lift is the least successful. This is because the first lift is generally
+the lightest, and the last lift is generally the heaviest. This is a trend we expected, but it's
+nice to see it confirmed in the data.
+
 
