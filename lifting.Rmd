@@ -1,7 +1,8 @@
 ---
 title: "Powerlifting: An Exploration on the Data"
 author: "Zach Eanes & Dalton Rogers"
-output: html_document
+output: powerpoint_presentation
+  reference_doc: "template.pptx"
 date: "2024-05-07"
 ---
 
@@ -20,7 +21,7 @@ As an easy description, powerlifting is the open sport of competing to see who c
 the most total weight across three primary lifts. These lifts being Squat, Bench, and Deadlift 
 (referred to as SBD throughout this project). 
 
-The general structure of many of these competitions includes many little factors:
+# The general structure of many of these competitions includes many little factors:
 1) Everyone is split into weight classes, gender, and age classes. This is to ensure everyone is 
    competing fairly and no one has a clear advantage.
 2) Every lifter has 3 attempts for each lifting, leaving 9 total lifts across the competition. 
@@ -30,12 +31,13 @@ The general structure of many of these competitions includes many little factors
    perspective of the lifter. In order for a lift to be good, 2/3 judges must deem it a good lift.
    Some common failures include not getting enough depth squatting, not controlling the drop after
    a deadlift, or of course literally not getting the weight up.
-   
-# Linear Progression of Weight Classes?
+
+# Linear Progression of Weight Classes? (Section 1)
 This one is simple, do heavier weights classes generally lift higher amounts than lower? We can
 observe the best successful lift for each SBD and find an average for each weight class group
 and then we can compare the classes to see if there's a linear progression.
 
+# Weight Classes for IPF
 IPF lists their male weight classes as:
 59.0 kg Class:   up to 59.0 kg
 66.0 kg Class:   from 59.01 kg up to 66.0 kg
@@ -55,19 +57,9 @@ IPF lists their female weight classes as:
 76.0 kg Class:  from 69.01 kg up to 76.0 kg
 84.0 kg Class:  from 76.01 kg up to 84.0 kg
 84.0+ kg Class: from 84.01 kg up to unlimited
-```{r avg_success}
-# get those in proper weight classes, and make weight_class_kg a factor for organization
-male_factors = c(59, 66, 74, 83, 93, 105, 120, "120+")
-male_classes <- ipf |> 
-    filter(weight_class_kg %in% c(59, 66, 74, 83, 93, 105, 120, "120+") & sex == "M") |>
-    mutate(weight_class_kg = factor(weight_class_kg, levels = male_factors))
 
-female_factors = c(47, 52, 57, 63, 69, 76, 84, "84+")
-female_classes <- ipf |>
-    filter(weight_class_kg %in% c(47, 52, 57, 63, 69, 76, 84, "84+") & sex == "F") |>
-    mutate(weight_class_kg = factor(weight_class_kg, levels = female_factors))
-           
-
+# Functions Used
+```{r avg_success_functions}
 
 # This function gets the average of the best lift for each factor and arranges it
 # by the weight class itself
@@ -77,7 +69,7 @@ avg_weights <- function(class) {
     class |> 
     filter(!is.na(best3squat_kg) & !is.na(best3bench_kg) & !is.na(best3deadlift_kg)) |> 
         group_by(weight_class_kg) |> # group by their respective classes
-        summarise(
+        summarize(
             avg_squat = sum(best3squat_kg) / n(), # get avg squat
             avg_bench = sum(best3bench_kg) / n(), # get avg bench
             avg_dead = sum(best3deadlift_kg) / n()) |> # get avg deadlift 
@@ -93,28 +85,52 @@ make_avgs_tidyer <- function(class) {
     class |> pivot_longer(cols = c(avg_squat, avg_bench, avg_dead),
                           names_to = "lift", values_to = "avg_weight")
 }
+```
+
+# Male Weight Classes
+``` {r} 
+# get those in proper weight classes, and make weight_class_kg a factor for organization
+male_factors = c(59, 66, 74, 83, 93, 105, 120, "120+")
+male_classes <- ipf |> 
+    filter(weight_class_kg %in% c(59, 66, 74, 83, 93, 105, 120, "120+") & sex == "M") |>
+    mutate(weight_class_kg = factor(weight_class_kg, levels = male_factors))
 
 # get information we need for our data and make it usable
-weights_male <- avg_weights(male_classes) |> make_avgs_tidyer(); weights_male
-weights_female <- avg_weights(female_classes) |> make_avgs_tidyer(); weights_female 
+weights_male <- avg_weights(male_classes) |> make_avgs_tidyer()
 
 # group by the weight class and put sbd all next to each other in group
 weights_male |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = lift)) + 
     geom_bar(stat = "identity", position = "dodge") +
     labs(
-        title = "Comparing Male Average Weights for SBD across Common Weight Classes",
+        title = "Comparing Male Average Weights for SBD per Weight Class",
         x = "Weight Class (kg)",
         y = "Average Weight (kg)"
     ) + scale_fill_discrete(name = "What Lift?", labels = c("Bench", "Deadlift", "Squat"))
 
+```
+
+# Female Weight Classes
+``` {r} 
+# get those in proper weight classes, and make weight_class_kg a factor for organization
+female_factors = c(47, 52, 57, 63, 69, 76, 84, "84+")
+female_classes <- ipf |>
+    filter(weight_class_kg %in% c(47, 52, 57, 63, 69, 76, 84, "84+") & sex == "F") |>
+    mutate(weight_class_kg = factor(weight_class_kg, levels = female_factors))
+          
+# get information we need for our data and make it usable
+weights_female <- avg_weights(female_classes) |> make_avgs_tidyer() 
+
+# group by the weight class and put sbd all next to each other in group
 weights_female |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = lift)) + 
     geom_bar(stat = "identity", position = "dodge") +
     labs(
-        title = "Comparing Female Average Weights for SBD across Common Weight Classes",
+        title = "Comparing Female Average Weights for SBD per Weight Class",
         x = "Weight Class (kg)",
         y = "Average Weight (kg)"
     ) + scale_fill_discrete(name = "What Lift?", labels = c("Bench", "Deadlift", "Squat"))
 ```
+
+# Failures...
 In order to get this information together, we had many failures and attempts at using the 
 data is a less tidy manner. The biggest change was the inclusion of the pivot_longer in order
 to allow us to create more rows and make the graphing easier. It allows us to group and place
@@ -124,39 +140,38 @@ inside of a cell and "double dipping". We had numbers in the columns for the lif
 in the end out newest form is tidiest and surely best for our purposes. Below is some of the 
 attempts we had beforehand, which ended as a failure in all honesty.
 
+# R Code for Failure
 ```{r avg_failure}
-# below method is an early attempt that ended in failure 
-pre_avg_weights <- function(class) {
-    class |>  # filter out any entry missing the best lift
-        filter(!is.na(best3squat_kg) & !is.na(best3bench_kg) & !is.na(best3deadlift_kg)) |> 
-        group_by(weight_class_kg) |> # group by their respective classes
-        summarise(
-            avg_squat = sum(best3squat_kg) / n(), # get avg squat
-            avg_bench = sum(best3bench_kg) / n(), # get avg bench
-            avg_dead = sum(best3deadlift_kg) / n()) |> # get avg deadlift 
-        arrange(weight_class_kg)
-}
-
 # recreate our data set for demonstration purposes
 male_classes <- ipf |> 
     filter(weight_class_kg %in% c(59, 66, 74, 83, 93, 105, 120, "120+") & sex == "M") |>
     mutate(weight_class_kg = factor(weight_class_kg, 
                                        levels = male_factors))
 # this was the dataset before
-pre_avg_weights(male_classes) 
+avg_weights(male_classes) 
 
 # this was out plot before the pivot_longer, as we just had each lift in thier own graph
-pre_avg_weights(male_classes) |> ggplot(aes(x = weight_class_kg, y = avg_squat, fill = avg_squat)) + 
+avg_weights(male_classes) |> ggplot(aes(x = weight_class_kg, y = avg_squat, fill = avg_squat)) + 
     geom_bar(stat = "identity") 
 
 ```
 
+# Conclusion for Section 1
+Overall, we were able to find that there is a general linear progression of weight classes
+and the amount of weight lifted. This is a trend we expected, as the heavier weight classes
+generally have more muscle mass and are able to lift more weight.
 
-# Percentage of Failed Lifts Across all Nine Attempts
+Interestingly, we found that the womens 76kg class completely beat out the class above them, 
+the 84kg. Along with this, towards the higher classes, there's a slight taper on the 
+deadlifts, and our guess is because of grip strength limitations.
+
+# Percentage of Failed Lifts Across all Nine Attempts (Section 2)
 In this section, we wanted to observe if for certain lifts, competitors are more likely to
 fail the lift. In the database, if a life begins with a "-", this means it was a failure. 
 Using this, we may be able to get the percentage of good lifts to failed lifts for each lift, 
 all 3 for SBD.
+
+# Setup for Graphing
 ```{r}
 # first we remove bad entries, where any of their lifts are na. sum up only data we want
 # to observe
@@ -176,7 +191,10 @@ good_lifts <- good_lifts |>
     pivot_longer(cols = c(squat1kg, squat2kg, squat3kg, bench1kg, bench2kg, bench3kg, 
                           deadlift1kg, deadlift2kg, deadlift3kg),
                  names_to = "lift", values_to = "weight")
+```
 
+# Getting the Percentage of Failed Lifts
+```{r} 
 # this function gets the percentage of failed lifts for each lift. because the dataset 
 # lists the failed lifts beginning with a -, we can use regex to explore failure 
 # to success
@@ -187,7 +205,7 @@ percentage_failed <- function(class) {
         # group by lifts to see the success/fail rate of each
         group_by(lift) |>
         # get the percentage of failed lifts for each lift
-        summarise( # get the lift and their respective failure/success rate
+        summarize( # get the lift and their respective failure/success rate
             failed = sum(str_detect(weight, "^-.*")) / n() * 100,
             num_failed = sum(str_detect(weight, "^-.*")),
             success = 100 - failed,
@@ -198,7 +216,10 @@ percentage_failed <- function(class) {
 
 # get the percentage of failed lifts for each lift
 rates <- percentage_failed(good_lifts)
+```
 
+# Graphing the Data
+```{r}
 # longer data in order to graph easier :)
 lift_data_long <- rates |> 
     pivot_longer(cols = c(failed, success), names_to = "outcome", values_to = "percentage")
@@ -223,6 +244,8 @@ ggplot(lift_data_long, aes(x = lift, y = percentage, fill = outcome)) +
     # make the x axis text easier to read
     theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
+
+# Conclusion for Section 2
 Looking at the chart itself, there's some shocking results. First, we never expected the last
 bench attempt to have the highest failure rate. This is because the bench press is generally
 attempted safely, as competitors still have the deadlift after to try and get more. Our guess was
@@ -238,3 +261,34 @@ the lightest, and the last lift is generally the heaviest. This is a trend we ex
 nice to see it confirmed in the data.
 
 
+# Is Powerlifting a growing sport? (Section 3)
+
+In this section, we simply want to see if the data supports the idea that powerlifting is a
+growing sport. It's been said to be a growing sport, and many say that the explosion of social 
+media especially backs this up. To do this, we can observe the total amount of competitors in 
+each year, and see if there's a trend of growth. 
+
+# Questions to Answer
+There's also some other interesting ideas we'd like to see:
+1) Did the pandemic of COVID-19 have an effect on the amount of competitors? If so, what years 
+   were most affected by it?
+2) Which years had the largest percent growth from the previous?
+3) Which years had the largest percent decrease from the previous?
+4) What is the average growth rate of competitors per year?
+
+By being able to look at the data to support this idea, especially for the largest powerlifting 
+federation, IPF, we can see if the sport is truly growing or not. 
+
+```{r}
+
+```
+
+# TODO (Section 4)
+
+
+
+# TODO (Section 5)
+ 
+
+
+# Conclusion
