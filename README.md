@@ -5,8 +5,9 @@ from the IPF, one of the largest powerlifting federations. It includes
 analysis about:
 1) The average weight for the best attempt of each lift for weight classes
 2) Percentage of Successful to Failed Lifts across the nine attempts
-3) TODO
-4) TODO
+3) Is Powerlifting a growing Sport? 
+4) What age classes lift the most?
+5) Difference in equipment types.
 
 # Dataset
 Thanks OpenPowerlifting Data Service for the csv we downloaded and used for
