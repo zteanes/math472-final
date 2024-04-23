@@ -278,9 +278,67 @@ There's also some other interesting ideas we'd like to see:
 By being able to look at the data to support this idea, especially for the largest powerlifting 
 federation, IPF, we can see if the sport is truly growing or not. 
 
+# Calculations for our Questions
 ```{r}
+# using the date column, get the year of each entry
+years_ipf <- ipf |> mutate(year = year(date)) |> group_by(year) |> arrange(year)
 
+# get the total amount of competitors for each year 
+total_competitors <- years_ipf |> summarize(total_competitors = n())
+
+# get the percent growth from the previous year
+total_competitors <- total_competitors |> 
+    mutate(percent_growth = (total_competitors - lag(total_competitors)) / lag(total_competitors) * 100)
+
+# get the average growth rate of competitors per year
+avg_growth_rate <- total_competitors |>
+    summarize(avg_growth_rate = mean(percent_growth, na.rm = TRUE))
+
+avg_growth_rate
 ```
+
+# Graphing the Data
+```{r}
+# plot the total competitors per year
+total_competitors |> ggplot(aes(x = year, y = total_competitors)) +
+    # line to show the true trend of competitors
+    geom_line() + 
+    # bar chart to show individual years clearer
+    geom_bar(stat = "identity", alpha = 0.5, fill = "purple") +
+    labs(
+        title = "Total Amount of Competitors per Year",
+        x = "Year",
+        y = "Total Competitors"
+    )
+```
+
+# Percentage Growth of Each Year
+```{r}
+# plot the percentage growth of each year
+total_competitors |> ggplot(aes(x = year, y = percent_growth)) +
+    # line to show the true trend of growth
+    geom_line() + 
+    # bar chart to show individual years clearer
+    geom_bar(stat = "identity", alpha = 0.5, fill = "blue") +
+    labs(
+        title = "Percentage Growth of Competitors per Year",
+        x = "Year",
+        y = "Percentage Growth (%)"
+    )
+```
+
+# Conclusion for Section 3
+After our analysis, we we able to conclude that in general powerlifting is a growing sport. 
+We can see this is the general trend of it growing upwards, as well we found the average growth
+rate for each year to be roughly 33.5%. Overall, there is a very positive trend for powerlifting
+and it is growing more than ever. 
+
+As we guessed, COVID had a massive impact on the growth and affect of IPF competitor counts. From 
+our data, the year 2020 and 2021 both had large drop-offs from the previous 2019, where the sport
+seemed to have peaked. Interestingly, the largest percentage growth comes in the earlier years as 
+well, such as 1979 and 1980. After a short google search, we were able to find that the IPF 
+world championships were held in Dayton, Ohio. Since U.S.A had the largest amount of competitors
+compared to other countries, this could be a reason for the large growth in those years.
 
 # What age classes lift the most? (Section 4)
 
