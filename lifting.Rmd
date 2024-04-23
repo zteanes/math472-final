@@ -61,18 +61,19 @@ IPF lists their female weight classes as:
 ```{r avg_success_functions}
 
 # This function gets the average of the best lift for each factor and arranges it
-# by the weight class itself
+# by the attribute(s) passed in
 #
 # Args: class - the class we want to get the average weights for
-avg_weights <- function(class) {
+#       grouping_by - the attribute(s) to group and arrange the data by
+avg_weights <- function(class, grouping_by) {
     class |> 
     filter(!is.na(best3squat_kg) & !is.na(best3bench_kg) & !is.na(best3deadlift_kg)) |> 
-        group_by(weight_class_kg) |> # group by their respective classes
+        group_by({{grouping_by}}) |> # group by their respective classes
         summarize(
             avg_squat = sum(best3squat_kg) / n(), # get avg squat
             avg_bench = sum(best3bench_kg) / n(), # get avg bench
             avg_dead = sum(best3deadlift_kg) / n()) |> # get avg deadlift 
-        arrange(weight_class_kg) # arrange to make it better
+        arrange({{grouping_by}}) # arrange to make it better
 }
 
 # This function takes our data and makes the data itself tidier and simple to use for
@@ -95,8 +96,8 @@ male_classes <- ipf |>
     mutate(weight_class_kg = factor(weight_class_kg, levels = male_factors))
 
 # get information we need for our data and make it usable
-weights_male <- avg_weights(male_classes) |> make_avgs_tidyer()
-
+weights_male <- avg_weights(male_classes, weight_class_kg) |> make_avgs_tidyer()
+weights_male
 # group by the weight class and put sbd all next to each other in group
 weights_male |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = lift)) + 
     geom_bar(stat = "identity", position = "dodge") +
@@ -117,7 +118,7 @@ female_classes <- ipf |>
     mutate(weight_class_kg = factor(weight_class_kg, levels = female_factors))
           
 # get information we need for our data and make it usable
-weights_female <- avg_weights(female_classes) |> make_avgs_tidyer() 
+weights_female <- avg_weights(female_classes, weight_class_kg) |> make_avgs_tidyer() 
 
 # group by the weight class and put sbd all next to each other in group
 weights_female |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = lift)) + 
@@ -150,7 +151,7 @@ male_classes <- ipf |>
 avg_weights(male_classes) 
 
 # this was out plot before the pivot_longer, as we just had each lift in thier own graph
-avg_weights(male_classes) |> ggplot(aes(x = weight_class_kg, y = avg_squat, fill = avg_squat)) + 
+avg_weights(male_classes, weight_class_kg) |> ggplot(aes(x = weight_class_kg, y = avg_squat, fill = avg_squat)) + 
     geom_bar(stat = "identity") 
 
 ```
@@ -340,8 +341,45 @@ well, such as 1979 and 1980. After a short google search, we were able to find t
 world championships were held in Dayton, Ohio. Since U.S.A had the largest amount of competitors
 compared to other countries, this could be a reason for the large growth in those years.
 
-# What age classes lift the most? (Section 4)
+# What Role Does Age Play (Section 4)
 
+Strength is a characteristic which is developed over time, meaning it takes time for
+an individuals body to reach its maximum potential. Unfortunately, the body also
+deteriorates over time. We set out to see which age class is the strongest on average
+in hopes to discover when the body is at its peak strength while consistently working
+out. It is expected for the peak age class to be 24-34, where the body is building
+strength before this mark but losing strength after this mark. This will be explored
+in both men and women to see if they a follow similar strength pattern.
+
+
+first start by splitting data up by the corresponding age groups
+then calculate their average totals
+then compare and see if there are any noticable trends
+go a step further and see which ages within the age classes are the strongest
+
+# Functions for Strength by Age
+```{r}
+
+get_age_averages <- function(data){
+  result <- data |> 
+              avg_weights(data)
+  return (result)
+}
+```
+
+# Male Strength by Age Class
+```{r}
+# this is the order of the age classes from youngest to oldest
+age_levels = c("5-12", "13-15", "16-17", "18-19", "20-23", "24-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-999")
+
+# get only the men, and turn the age_class into a factor for organization
+men_averages <- ipf |> filter(sex == "M") |>
+                mutate(age_class = factor(age_class, levels = mens_levels))
+
+# Now we can perform our actual calculations for men
+result <- avg_weights(men_averages, age_class)
+result
+```
 
 
 # Difference in equipment types. (Section 5)
