@@ -65,15 +65,15 @@ IPF lists their female weight classes as:
 #
 # Args: class - the class we want to get the average weights for
 #       grouping_by - the attribute(s) to group and arrange the data by
-avg_weights <- function(class, grouping_by) {
+avg_weights <- function(class, grouping_by1, grouping_by2) {
     class |> 
-    filter(!is.na(best3squat_kg) & !is.na(best3bench_kg) & !is.na(best3deadlift_kg) & !is.na({{grouping_by}})) |> 
-        group_by({{grouping_by}}) |> # group by their respective classes
+    filter(!is.na(best3squat_kg) & !is.na(best3bench_kg) & !is.na(best3deadlift_kg) & !is.na({{grouping_by1}}) & !is.na({{grouping_by2}})) |> 
+        group_by({{grouping_by1}}, {{grouping_by2}}) |> # group by their respective classes
         summarize(
             avg_squat = sum(best3squat_kg) / n(), # get avg squat
             avg_bench = sum(best3bench_kg) / n(), # get avg bench
             avg_dead = sum(best3deadlift_kg) / n()) |> # get avg deadlift 
-        arrange({{grouping_by}}) # arrange to make it better
+        arrange({{grouping_by1}}, {{grouping_by2}}) # arrange to make it better
 }
 
 # This function takes our data and makes the data itself tidier and simple to use for
@@ -421,7 +421,7 @@ female_result
 # Graph Female Strength by Age Class
 ```{r}
 # create a scatter plot with lines which illustrates the average lift weight for 
-# the various male weight classes 
+# the various female weight classes 
 female_result |> ggplot(aes(x = age_class)) +
   geom_point(aes(y = avg_squat, col = "Squat", shape = "Squat"), size = 2.5) +
   geom_point(aes(y = avg_bench, col = "Bench", shape = "Bench"), size = 2.5) +
@@ -442,11 +442,11 @@ female_result |> ggplot(aes(x = age_class)) +
 ```
 # Strongest Age in Each Age Class
 ```{r}
-# First we find the strongest males age in each age class
+# first we find the strongest males age in each age class
 strongest_males <- max_age_class(male_averages)
 strongest_males
 
-# Next we find the strongest females age in each age class
+# next we find the strongest females age in each age class
 strongest_females <- max_age_class(female_averages)
 strongest_females
 ```
@@ -467,8 +467,51 @@ with an age closer to the lower limit of the weight class. These results may be 
 contestants with an age or age class of NA were not included, so their may be higher totals that were
 not accounted for. Overall, there is a clear correlation between age and strength.
 
-# Difference in equipment types. (Section 5)
- 
+# Difference in Equipment Types. (Section 5)
+
+# Get Data for Equipment
+```{r}
+# use the avg_weights function passing in equipment and weight class as parameters
+# this will find the average weight for each equipment type in each weight class for male
+male_equipment <- avg_weights(male_classes, equipment, weight_class_kg)
+male_equipment <- make_avgs_tidyer(male_equipment)
+male_equipment
+
+# use the avg_weights function passing in equipment and weight class as parameters
+# this will find the average weight for each equipment type in each weight class for female
+female_equipment <- avg_weights(female_classes, equipment, weight_class_kg)
+female_equipment <- make_avgs_tidyer(female_equipment)
+female_equipment
+```
+
+# Graph Findings
+```{r}
+# here are the findings for the males
+male_equipment |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = equipment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~lift, scales = "free_y", labeller = labeller(lift = c("avg_squat" = "Squat", "avg_bench" = "Bench", "avg_dead" = "Deadlift"))) +
+  labs(title = "Average Lifts by Weight Class and Equipment Type Male",
+       x = "Weight Class (kg)",
+       y = "Average Lift Weight",
+       fill = "Equipment Type") +
+  theme_minimal() +
+  theme(legend.position = "top") +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+```
+```{r}
+# here are the findings for the females
+male_equipment |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = equipment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~lift, scales = "free_y", labeller = labeller(lift = c("avg_squat" = "Squat", "avg_bench" = "Bench", "avg_dead" = "Deadlift"))) +
+  labs(title = "Average Lifts by Weight Class and Equipment Type Female",
+       x = "Weight Class (kg)",
+       y = "Average Lift Weight",
+       fill = "Equipment Type") +
+  theme_minimal() +
+  theme(legend.position = "top") +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+```
+
 
 
 # Conclusion
