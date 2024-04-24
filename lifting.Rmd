@@ -67,7 +67,7 @@ IPF lists their female weight classes as:
 #       grouping_by - the attribute(s) to group and arrange the data by
 avg_weights <- function(class, grouping_by) {
     class |> 
-    filter(!is.na(best3squat_kg) & !is.na(best3bench_kg) & !is.na(best3deadlift_kg)) |> 
+    filter(!is.na(best3squat_kg) & !is.na(best3bench_kg) & !is.na(best3deadlift_kg) & !is.na({{grouping_by}})) |> 
         group_by({{grouping_by}}) |> # group by their respective classes
         summarize(
             avg_squat = sum(best3squat_kg) / n(), # get avg squat
@@ -345,25 +345,30 @@ compared to other countries, this could be a reason for the large growth in thos
 
 Strength is a characteristic which is developed over time, meaning it takes time for
 an individuals body to reach its maximum potential. Unfortunately, the body also
-deteriorates over time. We set out to see which age class is the strongest on average
-in hopes to discover when the body is at its peak strength while consistently working
-out. It is expected for the peak age class to be 24-34, where the body is building
-strength before this mark but losing strength after this mark. This will be explored
-in both men and women to see if they a follow similar strength pattern.
+deteriorates over time. In this section, we explore this relationship with hopes in
+finding the age class where the strength is at its highest. To accomplish this, we
+will examine both the male and female average compound lifts (bench, squat, and deadlift)
+across each age class. We expect the highest lifts to be found in the 24-34 age class
+as this is where bodies typically hit their peak with consistent weight training.
 
-
-first start by splitting data up by the corresponding age groups
-then calculate their average totals
-then compare and see if there are any noticable trends
-go a step further and see which ages within the age classes are the strongest
-
-# Functions for Strength by Age
+# Useful Functions
 ```{r}
 
-get_age_averages <- function(data){
-  result <- data |> 
-              avg_weights(data)
-  return (result)
+# This function gets the ages of the individuals with the highest totals in each
+# age class. It returns them as a data frame.
+#
+# Args: data - the data frame that will be altered
+max_age_class <- function(data){
+  index <- data |>
+            filter(!is.na(age)) |> 
+              filter(!is.na(age_class)) |>
+                group_by(age_class) |>
+                  filter((total_kg == max(total_kg, na.rm = TRUE))) |>
+                    select(name, age, age_class, total_kg) |>
+                        distinct(name, age, age_class, total_kg) |> 
+                          arrange(age_class)
+
+  return (index)
 }
 ```
 
@@ -373,14 +378,96 @@ get_age_averages <- function(data){
 age_levels = c("5-12", "13-15", "16-17", "18-19", "20-23", "24-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-999")
 
 # get only the men, and turn the age_class into a factor for organization
-men_averages <- ipf |> filter(sex == "M") |>
-                mutate(age_class = factor(age_class, levels = mens_levels))
+male_averages <- ipf |> filter(sex == "M") |>
+                mutate(age_class = factor(age_class, levels = age_levels))
 
-# Now we can perform our actual calculations for men
-result <- avg_weights(men_averages, age_class)
-result
+# now we can perform our actual calculations for men
+male_result <- avg_weights(male_averages, age_class)
+male_result
 ```
 
+# Graph Male Average Strength
+```{r}
+# create a scatter plot with lines which illustrates the average lift weight for 
+# the various male weight classes 
+male_result |> ggplot(aes(x = age_class)) +
+  geom_point(aes(y = avg_squat, col = "Squat", shape = "Squat"), size = 2.5) +
+  geom_point(aes(y = avg_bench, col = "Bench", shape = "Bench"), size = 2.5) +
+  geom_point(aes(y = avg_dead, col = "Deadlift", shape = "Deadlift"), size = 2.5) +
+  geom_line(aes(y = avg_squat, color = "Squat", group = 1), linetype = "solid") +
+  geom_line(aes(y = avg_bench, color = "Bench", group = 1), linetype = "solid") +
+  geom_line(aes(y = avg_dead, color = "Deadlift", group = 1), linetype = "solid") +
+  scale_color_manual(values = c("Squat" = "blue", "Bench" = "red", "Deadlift" = "darkgreen")) +
+  scale_shape_manual(values = c("Squat" = 1, "Bench" = 2, "Deadlift" = 3)) +
+  labs(
+    title = "Average Male Squat, Bench, & Deadlift Across Age Classes",
+    x = "Age Class",
+    y = "Weight (kg)",
+    color = "Exercise Type",
+    shape = "Exercise Type"
+  ) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+# Female Strength by Age Class
+```{r}
+# get only the females, and turn the age_class into a factor for organization
+female_averages <- ipf |> filter(sex == "F") |>
+                mutate(age_class = factor(age_class, levels = age_levels))
+
+# now we can perform our actual calculations for female
+female_result <- avg_weights(female_averages, age_class)
+female_result
+```
+
+# Graph Female Strength by Age Class
+```{r}
+# create a scatter plot with lines which illustrates the average lift weight for 
+# the various male weight classes 
+female_result |> ggplot(aes(x = age_class)) +
+  geom_point(aes(y = avg_squat, col = "Squat", shape = "Squat"), size = 2.5) +
+  geom_point(aes(y = avg_bench, col = "Bench", shape = "Bench"), size = 2.5) +
+  geom_point(aes(y = avg_dead, col = "Deadlift", shape = "Deadlift"), size = 2.5) +
+  geom_line(aes(y = avg_squat, color = "Squat", group = 1), linetype = "solid") +
+  geom_line(aes(y = avg_bench, color = "Bench", group = 1), linetype = "solid") +
+  geom_line(aes(y = avg_dead, color = "Deadlift", group = 1), linetype = "solid") +
+  scale_color_manual(values = c("Squat" = "blue", "Bench" = "red", "Deadlift" = "darkgreen")) +
+  scale_shape_manual(values = c("Squat" = 1, "Bench" = 2, "Deadlift" = 3)) +
+  labs(
+    title = "Average Female Squat, Bench, & Deadlift Across Age Classes",
+    x = "Age Class",
+    y = "Weight (kg)",
+    color = "Exercise Type",
+    shape = "Exercise Type"
+  ) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+# Strongest Age in Each Age Class
+```{r}
+# First we find the strongest males age in each age class
+strongest_males <- max_age_class(male_averages)
+strongest_males
+
+# Next we find the strongest females age in each age class
+strongest_females <- max_age_class(female_averages)
+strongest_females
+```
+
+# Conclusion for Section 4
+As we examine the relationship between age and strength there are a few observations that can
+be made. First of all, our guess for the strongest age class being 24-34 is generally true. For
+the female section it is evident that this is the case; however, as we examine the male section
+we see that the strongest age class is spread across two age classes. Both the male 24-34 and
+35-39 age classes have similar lift numbers, from which we can deduce that the male have a slightly
+longer peak than the females do.
+
+Looking into this relationship further, we decided to find the age of the individual with the highest 
+total in each age class. This was once again split between male and female. By doing this, we see the
+age of the individual with the highest total is typically near the upper limit of the age class for the
+age classes prior to 24-34. After this age class, the highest total was generally held by individuals
+with an age closer to the lower limit of the weight class. These results may be slightly skewed, as
+contestants with an age or age class of NA were not included, so their may be higher totals that were
+not accounted for. Overall, there is a clear correlation between age and strength.
 
 # Difference in equipment types. (Section 5)
  
