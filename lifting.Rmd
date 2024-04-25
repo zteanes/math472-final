@@ -467,7 +467,16 @@ with an age closer to the lower limit of the weight class. These results may be 
 contestants with an age or age class of NA were not included, so their may be higher totals that were
 not accounted for. Overall, there is a clear correlation between age and strength.
 
-# Difference in Equipment Types. (Section 5)
+# Difference in Equipment Types (Section 5)
+
+In powerlifting events there are different forms of equipment that can give competitors some assistance,
+if they are allowed. This data set consists of three different kinds of equipment. The first is raw, which
+simply means the competition only allows knee sleeves. The second kind is single-ply, which refers to the 
+suits that are allowed in the competition. In this case the suits are composed of one layer. The third kind
+is wraps, which means knee wraps are allowed. With these different equipment options in mind, we want to
+determine which type of equipment plays the biggest role in overall strength. We assume it will be the
+single-ply, as this is a suit that provides full body support as opposed to just a single part of the body,
+like the other equipment. 
 
 # Get Data for Equipment
 ```{r}
@@ -486,7 +495,7 @@ female_equipment
 
 # Graph Findings
 ```{r}
-# here are the findings for the males
+# here are the graphical findings for the males, displayed in a bar plot
 male_equipment |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = equipment)) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~lift, scales = "free_y", labeller = labeller(lift = c("avg_squat" = "Squat", "avg_bench" = "Bench", "avg_dead" = "Deadlift"))) +
@@ -499,8 +508,8 @@ male_equipment |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = equipme
   theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
 ```{r}
-# here are the findings for the females
-male_equipment |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = equipment)) +
+# here are the graphical findings for the females, displayed in a bar plot
+female_equipment |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = equipment)) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~lift, scales = "free_y", labeller = labeller(lift = c("avg_squat" = "Squat", "avg_bench" = "Bench", "avg_dead" = "Deadlift"))) +
   labs(title = "Average Lifts by Weight Class and Equipment Type Female",
@@ -511,7 +520,12 @@ male_equipment |> ggplot(aes(x = weight_class_kg, y = avg_weight, fill = equipme
   theme(legend.position = "top") +
   theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
+# Conclusion for Section 5
 
-
-
-# Conclusion
+The impact that equipment can have on lifts is substantial, as evidenced by the graphs produced.
+In both male and female events there is strong evidence that the single-ply suit is the most beneficial
+equipment. Some weight classes have over a 50 kilogram difference between the single-ply suit and the
+next closest equipment. Furthermore, the suit can be seen to have an increased effect on the bench press
+and squat. As we focus on the male section, it can be seen that the suit has an increased effect as the 
+weight class and the weight of the lift go up in both bench and squat. A similar trend can be seen when
+examining the female graph, so it is clear the benefit of wearing a single-ply suit. 
