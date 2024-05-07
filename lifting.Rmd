@@ -457,7 +457,8 @@ be made. First of all, our guess for the strongest age class being 24-34 is gene
 the female section it is evident that this is the case; however, as we examine the male section
 we see that the strongest age class is spread across two age classes. Both the male 24-34 and
 35-39 age classes have similar lift numbers, from which we can deduce that the male have a slightly
-longer peak than the females do.
+longer peak than the females do. On the contrary, women appear to retain their strength for a
+longer time than men. Meaning, men tend to lose their strength faster than women, proportionally.
 
 Looking into this relationship further, we decided to find the age of the individual with the highest 
 total in each age class. This was once again split between male and female. By doing this, we see the
